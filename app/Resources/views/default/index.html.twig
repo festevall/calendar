@@ -1,0 +1,164 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-offset-2 col-xs-8">
+                {% if is_granted("ROLE_USER") %}
+                    <div id="calendar""></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="add_event_modal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Add an event on <span class="event-date" id="event_date"></span></h4>
+                </div>
+                <form action="/save-event" method="POST" id="add_new_event">
+                    <div class="modal-body">
+                        <input type="hidden" id="event_id" name="event[event_id]" />
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Title</label>
+                            <input name="event[title]" class="form-control" id="event_title" />
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Description</label>
+                            <textarea name="event[description]" class="form-control" id="event_description"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Event starts at</label>
+                            <input type="datetime-local" name="event[starts_at]" class="form-control" id="event_starts_at"  />
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Event ends at</label>
+                            <input type="datetime-local" name="event[ends_at]" class="form-control" id="event_ends_at"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="exampleInputEmail1">Event color</label>
+                            <input type="color" name="event[color]" class="form-control" id="event_color"  />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button class="btn btn-success">Save changes</button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div class="modal fade" tabindex="-1" role="dialog" id="event_details">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Event <span id="event_details_title"></span></h4>
+                </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                Title
+                            </div>
+                            <div class="col-xs-9" id="event_content_details_title"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                Description
+                            </div>
+                            <div class="col-xs-9" id="event_content_details_description"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                Starts At
+                            </div>
+                            <div class="col-xs-9" id="event_content_details_starts"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                Ends At
+                            </div>
+                            <div class="col-xs-9" id="event_content_details_ends"></div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-3">
+                                Status
+                            </div>
+                            <div class="col-xs-9" id="event_content_details_status"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                        <button class="btn btn-success" id="edit_event_button" data-event_id="">Edit Event</button>
+                    </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        {% if is_granted("ROLE_USER") %}
+            $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay,listWeek'
+                },
+                timezone: 'local',
+                events:
+                    {% if events is not empty %}
+                        JSON.parse('{{ events|raw }}')
+                    {% else %}
+                        []
+                    {% endif %}
+                ,
+                eventDrop: saveEditedEvent,
+                dayClick: function(date, jsEvent, view, resourceObj) {
+                    console.log(date);
+                    $('#add_event_modal').modal();
+                    $('#add_new_event').find('[name="event[date]"]').val(date._d);
+                },
+                eventResizeStop: saveEditedEvent,
+                eventClick: function(event) {
+                    $('#event_content_details_title').text(event.title);
+                    $('#event_content_details_description').text(event.description);
+                    $('#event_content_details_starts').text(event.start.format('D-MM-Y HH:mm'));
+                    $('#event_content_details_ends').text(event.end.format('D-MM-Y HH:mm'));
+                    $('#event_content_details_status').text(event.status);
+                    $('#edit_event_button').data('event_id', event.id);
+                    $('#event_details').modal();
+                    currentEvent = event;
+                }
+            });
+        {% endif %}
+
+        function saveEditedEvent(event) {
+            global = event.start;
+            console.log(typeof event.start);
+            var editableEvent = {
+                event: {
+                    event_id: event.id,
+                    starts_at: event.start.format('Y-MM-D HH:mm'),
+                    ends_at: event.end.format('Y-MM-D HH:mm'),
+                    title: event.title,
+                    all_day: event.allDay,
+                    color: event.color,
+                    description: event.description
+                }
+            };
+            $('#calender').append('<div class="blocker" />');
+            $.ajax({
+                url: '/save-event',
+                type: 'POST',
+                data: editableEvent,
+                success: function() {
+                    $('.blocker').remove();
+                }
+            });
+        }
+    </script>
+{% endblock %}

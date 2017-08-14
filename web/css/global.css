@@ -1,0 +1,45 @@
+.text-left {
+    text-align: left;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.login-form .form-control {
+    width: 200px;
+}
+
+.login-form .input-group {
+    padding-bottom: 15px;
+}
+
+.login-form-container {
+    padding: 20px;
+}
+
+.register-button-container {
+    line-height: 32px;
+}
+
+#logged_user {
+    padding: 11px 20px;
+}
+
+#calendar {
+    position: relative;
+}
+
+.blocker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: RGBA(0,0,0,.1);
+    z-index: 10;
+}

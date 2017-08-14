@@ -1,0 +1,36 @@
+AppBundle\Entity\Events:
+    type: entity
+    table: null
+    repositoryClass: AppBundle\Repository\EventsRepository
+    id:
+        id:
+            type: integer
+            id: true
+            generator:
+                strategy: AUTO
+    fields:
+        title:
+            type: string
+            length: 255
+        start:
+            type: datetime
+        end:
+            type: datetime
+        description:
+            type: text
+            nullable: true
+        status:
+            type: string
+            length: 255
+        color:
+            type: string
+            length: 255
+    lifecycleCallbacks: {  }
+
+    manyToOne:
+        user:
+            targetEntity: User
+            joinColumn:
+                name: user_id
+                referencedColumnName: id
+
